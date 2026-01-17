@@ -1,16 +1,17 @@
-import { useState, useEffect } from "react"; // useEffect ইম্পোর্ট করা হলো
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom"; // useLocation ইম্পোর্ট করা হলো
 import { FiMenu, FiX } from "react-icons/fi";
 import logo from "../assets/logo.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false); // স্ক্রল স্টেট
+  const [isScrolled, setIsScrolled] = useState(false);
+  const location = useLocation(); // বর্তমান URL জানার জন্য
 
   // স্ক্রল ডিটেক্ট করার ফাংশন
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 20) { // ২০ পিক্সেল স্ক্রল করলেই কালার চেঞ্জ হবে
+      if (window.scrollY > 20) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
@@ -21,12 +22,17 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // লিংক একটিভ কিনা চেক করার ফাংশন
+  const isActive = (path) => {
+    return location.pathname === path ? "text-[#5e17eb] font-bold" : "text-gray-600 font-medium hover:text-[#5e17eb]";
+  };
+
   return (
     <nav
       className={`fixed w-full z-50 transition-all duration-300 ease-in-out ${
         isScrolled
-          ? "bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm" // স্ক্রল করলে এই ডিজাইন
-          : "bg-transparent border-transparent shadow-none" // একদম উপরে থাকলে এই ডিজাইন
+          ? "bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm"
+          : "bg-transparent border-transparent shadow-none"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -35,7 +41,7 @@ const Navbar = () => {
           {/* --- LOGO --- */}
           <Link to="/" className="flex-shrink-0 flex items-center">
             <img 
-              className="h-12 w-auto hover:scale-105 transition-transform duration-300" 
+              className="h-10 w-auto hover:scale-105 transition-transform duration-300" 
               src={logo} 
               alt="Bongo IT" 
             />
@@ -43,16 +49,16 @@ const Navbar = () => {
 
           {/* --- DESKTOP MENU --- */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-gray-600 font-medium hover:text-[#5e17eb] transition-colors">
+            <Link to="/" className={`transition-colors ${isActive("/")}`}>
               Home
             </Link>
-            <Link to="/courses" className="text-gray-600 font-medium hover:text-[#5e17eb] transition-colors">
+            <Link to="/courses" className={`transition-colors ${isActive("/courses")}`}>
               Courses
             </Link>
-            <Link to="/about" className="text-gray-600 font-medium hover:text-[#5e17eb] transition-colors">
+            <Link to="/about" className={`transition-colors ${isActive("/about")}`}>
               About Us
             </Link>
-            <Link to="/contact" className="text-gray-600 font-medium hover:text-[#5e17eb] transition-colors">
+            <Link to="/contact" className={`transition-colors ${isActive("/contact")}`}>
               Contact
             </Link>
           </div>
@@ -88,13 +94,22 @@ const Navbar = () => {
       {/* --- MOBILE MENU DROPDOWN --- */}
       <div className={`md:hidden absolute w-full bg-white border-b border-gray-100 shadow-lg transition-all duration-300 ease-in-out ${isOpen ? 'top-20 opacity-100' : 'top-[-400px] opacity-0'}`}>
         <div className="px-4 pt-2 pb-6 space-y-2">
-          <Link to="/" className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-[#5e17eb] hover:bg-purple-50">
+          <Link 
+            to="/" 
+            className={`block px-3 py-3 rounded-md text-base ${location.pathname === '/' ? 'bg-purple-50 text-[#5e17eb] font-bold' : 'text-gray-700 hover:text-[#5e17eb] hover:bg-purple-50'}`}
+          >
             Home
           </Link>
-          <Link to="/courses" className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-[#5e17eb] hover:bg-purple-50">
+          <Link 
+            to="/courses" 
+            className={`block px-3 py-3 rounded-md text-base ${location.pathname === '/courses' ? 'bg-purple-50 text-[#5e17eb] font-bold' : 'text-gray-700 hover:text-[#5e17eb] hover:bg-purple-50'}`}
+          >
             Courses
           </Link>
-          <Link to="/about" className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-[#5e17eb] hover:bg-purple-50">
+          <Link 
+            to="/about" 
+            className={`block px-3 py-3 rounded-md text-base ${location.pathname === '/about' ? 'bg-purple-50 text-[#5e17eb] font-bold' : 'text-gray-700 hover:text-[#5e17eb] hover:bg-purple-50'}`}
+          >
             About Us
           </Link>
           
