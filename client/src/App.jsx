@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -19,6 +20,7 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
           </Routes>
         </div>
+        <Footer />
       </BrowserRouter>
     </div>
   );
