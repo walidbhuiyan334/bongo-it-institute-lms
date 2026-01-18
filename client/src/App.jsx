@@ -6,6 +6,10 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import Home from "./pages/Home";
 import Courses from "./pages/Courses";
+import CourseDetails from "./pages/CourseDetails";
+import Checkout from "./pages/Checkout";
+import Dashboard from "./pages/Dashboard";
+import Classroom from "./pages/Classroom";
 
 function App() {
   return (
@@ -22,6 +26,10 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/courses" element={<Courses />} />
+            <Route path="/courses/:id" element={<CourseDetails />} />
+            <Route path="/checkout/:id" element={<Checkout />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/class/:id" element={<Classroom />} />
           </Routes>
         </div>
 
