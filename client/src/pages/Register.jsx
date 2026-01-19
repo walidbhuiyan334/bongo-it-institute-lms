@@ -35,7 +35,7 @@ const Register = () => {
       }
 
       // হোম পেজে রিডাইরেক্ট
-      navigate("/");
+      navigate("/dashboard");
       
     } catch (err) {
       console.error("Register Error:", err);

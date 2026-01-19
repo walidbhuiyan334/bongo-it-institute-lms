@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom"; // Link ইম্পোর্ট করা হয়েছে
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Grid, User, BookOpen, History, Settings, LogOut, CheckCircle2,
   Star, Edit2, Clock, Menu, X, ChevronRight
@@ -10,14 +10,41 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // ডামি ইউজার ডাটা
-  const userInfo = {
-    name: "User Name",
-    email: "user@example.com",
+  // ✅ ১. ইউজারের ডাটা স্টেট (ডিফল্ট ভ্যালু সহ)
+  const [userInfo, setUserInfo] = useState({
+    name: "Guest User",
+    email: "",
     role: "student",
-    studentId: "ST-2026",
+    studentId: "ST-0000",
+  });
+
+  // ✅ ২. পেজ লোড হলে চেক করবে লগইন আছে কিনা
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
+
+    if (!token || !storedUser) {
+      // যদি টোকেন না থাকে, লগইন পেজে পাঠাও
+      navigate("/login");
+    } else {
+      // টোকেন থাকলে ইউজারের তথ্য স্টেটে সেট করো
+      setUserInfo(JSON.parse(storedUser));
+    }
+  }, [navigate]);
+
+  // ✅ ৩. লগআউট ফাংশন আপডেট
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
+  const handleNavClick = (tab) => {
+    setActiveTab(tab);
+    setIsMobileMenuOpen(false);
+  };
+
+  // ডামি ডাটা (কোর্স এবং স্ট্যাটস) - এগুলো পরে আমরা API থেকে আনব
   const stats = {
     enrolled: 4,
     active: 2,
@@ -65,22 +92,14 @@ const Dashboard = () => {
     }
   ];
 
+  // প্রোফাইল সেকশনের জন্য ইউজারের রিয়েল ডাটা ব্যবহার
   const profile = {
-    name: "User Name",
-    email: "user@example.com",
-    phone: "017xxxxxxxx",
-    gender: "Male",
+    name: userInfo.name, // Real Name
+    email: userInfo.email, // Real Email
+    phone: "017xxxxxxxx", // (এটা পরে ডাটাবেসে থাকলে আনা যাবে)
+    gender: "N/A",
     bio: "শিখতে ভালোবাসি, গড়তে ভালোবাসি।",
     createdAt: "2025-12-01"
-  };
-
-  const handleLogout = () => {
-    navigate("/login");
-  };
-
-  const handleNavClick = (tab) => {
-    setActiveTab(tab);
-    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -94,8 +113,8 @@ const Dashboard = () => {
         {/* --- MOBILE HEADER --- */}
         <div className="lg:hidden flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100 sticky top-20 z-20">
            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#5e17eb] text-white flex items-center justify-center font-bold">
-                {userInfo.name.charAt(0)}
+              <div className="w-10 h-10 rounded-full bg-[#5e17eb] text-white flex items-center justify-center font-bold uppercase">
+                {userInfo.name ? userInfo.name.charAt(0) : "U"}
               </div>
               <div>
                 <h1 className="text-sm font-bold text-gray-900">{userInfo.name}</h1>
@@ -131,12 +150,12 @@ const Dashboard = () => {
 
             {/* Desktop User Info */}
             <div className="hidden lg:flex items-center gap-3 mb-8 pb-6 border-b border-gray-100">
-                 <div className="w-10 h-10 rounded-full bg-[#5e17eb] flex items-center justify-center text-white font-bold shadow-sm">
-                    {userInfo.name.charAt(0)}
+                 <div className="w-10 h-10 rounded-full bg-[#5e17eb] flex items-center justify-center text-white font-bold shadow-sm uppercase">
+                    {userInfo.name ? userInfo.name.charAt(0) : "U"}
                  </div>
                  <div>
                     <h3 className="font-bold text-gray-900 text-sm">{userInfo.name}</h3>
-                    <p className="text-[10px] text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded mt-1 inline-block">ID: {userInfo.studentId}</p>
+                    <p className="text-[10px] text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded mt-1 inline-block">ID: {userInfo.studentId || "ST-NEW"}</p>
                  </div>
             </div>
 
@@ -178,7 +197,7 @@ const Dashboard = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <StatCard icon={<BookOpen size={20} className="text-[#5e17eb]" />} label="এনরোল করা" value={stats.enrolled} />
                   <StatCard icon={<Clock size={20} className="text-blue-600" />} label="চলমান" value={stats.active} />
-                  <StatCard icon={<CheckCircle2 size={20} className="text-green-600" />} label="সম্পন্ন" value={stats.completedCourses} />
+                  <StatCard icon={<CheckCircle2 size={20} className="text-green-600" />} label="সম্পন্ন" value={stats.completed} />
                   <StatCard icon={<Star size={20} className="text-orange-500" />} label="সার্টিফিকেট" value={stats.certificates} />
                 </div>
 
@@ -194,7 +213,7 @@ const Dashboard = () => {
                       enrolledCourses.slice(0, 2).map((course) => (
                         <CourseCard
                           key={course._id}
-                          id={course._id} // ID পাস করা হয়েছে
+                          id={course._id}
                           image={course.thumbnail}
                           title={course.title}
                           instructor={course.instructor}
@@ -255,7 +274,7 @@ const Dashboard = () => {
                    {enrolledCourses.map((course) => (
                      <CourseCard
                        key={course._id}
-                       id={course._id} // ID পাস করা হয়েছে
+                       id={course._id}
                        image={course.thumbnail}
                        title={course.title}
                        instructor={course.instructor}

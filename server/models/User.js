@@ -1,5 +1,4 @@
-// server/models/User.js
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema(
   {
@@ -7,34 +6,30 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
       min: 2,
-      max: 100,
+      max: 50,
     },
     email: {
       type: String,
       required: true,
-      unique: true,
       max: 50,
-      match: [
-        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-        'Please provide a valid email',
-      ],
+      unique: true,
     },
     password: {
       type: String,
       required: true,
-      min: 6,
+      min: 5,
     },
     role: {
-      type: String,
-      enum: ['student', 'instructor', 'admin'],
-      default: 'student',
+        type: String,
+        enum: ["student", "admin", "instructor"],
+        default: "student",
     },
-    picturePath: {
-      type: String,
-      default: "",
-    },
+    studentId: {
+        type: String,
+        default: () => "ST-" + Math.floor(1000 + Math.random() * 9000) // অটোমেটিক আইডি জেনারেট হবে
+    }
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.model("User", UserSchema);

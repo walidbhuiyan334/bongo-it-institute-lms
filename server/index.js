@@ -4,7 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
-// const authRoutes = require('./routes/auth'); // নোট: যদি auth.js না থাকে তবে এটি আপাতত কমেন্ট করে রাখুন
+const authRoutes = require('./routes/auth'); // ১. Auth Route ইম্পোর্ট করা হলো
 
 // Configuration
 dotenv.config();
@@ -20,7 +20,7 @@ app.use(morgan("common"));
 app.use(cors());
 
 // Routes
-// app.use('/auth', authRoutes); // নোট: রাউট ফাইল তৈরি না হওয়া পর্যন্ত কমেন্ট থাক
+app.use('/auth', authRoutes); // ২. Auth Route সক্রিয় করা হলো
 
 // Default Route
 app.get('/', (req, res) => {
@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
 });
 
 // Server Setup
-const PORT = process.env.PORT || 5001; // Frontend এ 5001 ব্যবহার করছেন, তাই এখানেও 5001 দিলাম
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
     console.log(`Server running on port: ${PORT}`);
 });
