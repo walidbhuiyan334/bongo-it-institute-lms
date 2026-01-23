@@ -10,6 +10,12 @@ export default {
       screens: {
         'xs': '475px',
       },
+      fontFamily: {
+        // Bengali font ke priority dilam, karon eta English o support kore variable font hisebe
+        sans: ['"Anek Bangla"', '"Anonymous Pro"', 'sans-serif'], 
+        // Code ba specific English part er jonno
+        mono: ['"Anonymous Pro"', 'monospace'],
+      },
       // ২. গ্লোবাল কন্টেইনার সেটআপ (অটোমেটিক রেসপন্সিভ প্যাডিং)
       container: {
         center: true, // কন্টেইনার সবসময় মাঝখানে থাকবে

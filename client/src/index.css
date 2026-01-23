@@ -9,10 +9,27 @@
     scroll-behavior: smooth; /* স্মুথ স্ক্রলিং */
   }
   
-  body {
-    @apply bg-[#F9FAFB] text-gray-900 overflow-x-hidden; /* ডানে স্ক্রল বন্ধ */
-    -webkit-font-smoothing: antialiased; /* ফন্ট শার্প দেখাবে */
-  }
+ /* Global Font Apply */
+body {
+  font-family: "Anek Bangla", "Anonymous Pro", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optional: Scrollbar Design for Professional Look */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
 
   /* ফোকাস করলে ডিফল্ট নীল বর্ডার রিমুভ করে ব্র্যান্ড কালার দেওয়া */
   input:focus, textarea:focus, select:focus {
