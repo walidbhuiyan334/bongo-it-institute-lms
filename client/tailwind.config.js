@@ -6,47 +6,51 @@ export default {
   ],
   theme: {
     extend: {
-      // ১. ছোট মোবাইলের জন্য কাস্টম ব্রেকপয়েন্ট (Extra Small)
       screens: {
         'xs': '475px',
       },
       fontFamily: {
-        // Bengali font ke priority dilam, karon eta English o support kore variable font hisebe
+        // আপনার পছন্দের ফন্ট কনফিগারেশন (Anek Bangla বা Hind Siliguri)
         sans: ['"Anek Bangla"', '"Anonymous Pro"', 'sans-serif'], 
-        // Code ba specific English part er jonno
         mono: ['"Anonymous Pro"', 'monospace'],
       },
-      // ২. গ্লোবাল কন্টেইনার সেটআপ (অটোমেটিক রেসপন্সিভ প্যাডিং)
       container: {
-        center: true, // কন্টেইনার সবসময় মাঝখানে থাকবে
+        center: true,
         padding: {
-          DEFAULT: '1rem', // ডিফল্ট (মোবাইল): ১ rem প্যাডিং
-          sm: '2rem',      // ট্যাবলেট: ২ rem
-          lg: '4rem',      // ল্যাপটপ: ৪ rem
-          xl: '5rem',      // বড় মনিটর: ৫ rem
+          DEFAULT: '1rem',
+          sm: '2rem',
+          lg: '4rem',
+          xl: '5rem',
         },
       },
-      // ৩. আপনার ব্র্যান্ড কালার চাইলে এখানে যুক্ত করতে পারেন (অপশনাল)
       colors: {
         primary: '#5e17eb',
+      },
+      // 👇 এখান থেকে নতুন কোড শুরু (Animation এর জন্য) 👇
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        }
+      },
+      animation: {
+        float: 'float 5s ease-in-out infinite',
       }
+      // 👆 নতুন কোড শেষ 👆
     },
   },
   plugins: [
-    // ৪. স্ক্রলবার হাইড করার কাস্টম প্লাগিন (Horizontal Scroll এর জন্য খুব দরকারি)
+    // ... আপনার আগের প্লাগিন কোড ...
     function ({ addUtilities }) {
-      addUtilities({
-        '.scrollbar-hide': {
-          /* IE and Edge */
-          '-ms-overflow-style': 'none',
-          /* Firefox */
-          'scrollbar-width': 'none',
-          /* Safari and Chrome */
-          '&::-webkit-scrollbar': {
-            display: 'none',
+        addUtilities({
+          '.scrollbar-hide': {
+            '-ms-overflow-style': 'none',
+            'scrollbar-width': 'none',
+            '&::-webkit-scrollbar': {
+              display: 'none',
+            },
           },
-        },
-      });
-    },
+        });
+      },
   ],
 }

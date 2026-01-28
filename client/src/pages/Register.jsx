@@ -1,55 +1,58 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
 import { BiLoaderAlt } from "react-icons/bi";
+import toast from 'react-hot-toast'; // Toaster ইম্পোর্ট করার দরকার নেই, শুধু toast থাকলেই হবে
 import logo from "../assets/logo.png";
+import api from "../api"; 
 
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
 
     try {
-      // ব্যাকএন্ডে রেজিস্ট্রেশন রিকোয়েস্ট পাঠানো
-      const response = await axios.post("http://localhost:5001/auth/register", {
+      // API কল
+      const response = await api.post("/auth/register", {
         name,
         email,
         password,
       });
 
-      // রেজিস্ট্রেশন সফল হলে অটোমেটিক লগিন করিয়ে দেওয়া (Token সেভ করা)
-      // যদি আপনার ব্যাকএন্ড রেজিস্ট্রেশনের সাথে টোকেন দেয় তবেই এটি কাজ করবে
-      if(response.data.token) {
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+      if (response.data) {
+        toast.success("Registration Successful!");
+        
+        // টোকেন থাকলে ড্যাশবোর্ডে, না থাকলে লগইনে রিডাইরেক্ট
+        if(response.data.token) {
+           localStorage.setItem("token", response.data.token);
+           localStorage.setItem("user", JSON.stringify(response.data.user));
+           navigate("/dashboard");
+        } else {
+           setTimeout(() => navigate("/login"), 1500);
+        }
       }
-
-      // হোম পেজে রিডাইরেক্ট
-      navigate("/dashboard");
-      
     } catch (err) {
       console.error("Register Error:", err);
-      // ব্যাকএন্ড থেকে আসা এরর মেসেজ দেখানো
-      setError(err.response?.data?.message || "Registration failed. Try again.");
+      const message = err.response?.data?.message || "Registration failed. Please try again.";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-[#f8faff] relative overflow-hidden py-10">
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-[#f8faff] relative overflow-hidden py-10 font-[Hind Siliguri]">
       
-      {/* --- BACKGROUND ANIMATION (Login Page এর মতো same) --- */}
+      {/* ❌ আগে এখানে <Toaster /> ছিল, সেটি সরিয়ে ফেলা হয়েছে যাতে ডাবল পপআপ না আসে ❌ */}
+      
+      {/* --- BACKGROUND ANIMATION --- */}
       <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-[#5e17eb] opacity-10 rounded-full blur-[100px] animate-blob"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-blue-400 opacity-10 rounded-full blur-[100px] animate-blob animation-delay-2000"></div>
       
@@ -62,14 +65,6 @@ const Register = () => {
           <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
           <p className="text-gray-500 text-sm mt-1">Join Bongo IT Institute today</p>
         </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl mb-6 text-sm border border-red-100 flex items-center justify-center gap-2 animate-pulse">
-            <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleRegister} className="space-y-5">
           
@@ -123,11 +118,12 @@ const Register = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#5e17eb] transition-colors cursor-pointer"
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#5e17eb] transition-colors cursor-pointer outline-none"
               >
                 {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
               </button>
@@ -138,11 +134,11 @@ const Register = () => {
           <div className="flex items-center ml-1">
             <input 
               type="checkbox" 
-              className="w-4 h-4 text-[#5e17eb] border-gray-300 rounded focus:ring-[#5e17eb] cursor-pointer"
+              className="w-4 h-4 text-[#5e17eb] border-gray-300 rounded focus:ring-[#5e17eb] cursor-pointer accent-[#5e17eb]"
               required 
             />
             <span className="ml-2 text-sm text-gray-500">
-              I agree to the <a href="#" className="text-[#5e17eb] hover:underline">Terms</a> and <a href="#" className="text-[#5e17eb] hover:underline">Privacy Policy</a>
+              I agree to the <Link to="/terms" className="text-[#5e17eb] hover:underline font-medium">Terms</Link> and <Link to="/privacy" className="text-[#5e17eb] hover:underline font-medium">Privacy Policy</Link>
             </span>
           </div>
 

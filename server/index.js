@@ -4,7 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
-const authRoutes = require('./routes/auth'); // ১. Auth Route ইম্পোর্ট করা হলো
+const authRoutes = require('./routes/auth'); // ১. Auth Route ইম্পোর্ট
 
 // Configuration
 dotenv.config();
@@ -19,8 +19,9 @@ app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(morgan("common"));
 app.use(cors());
 
-// Routes
-app.use('/auth', authRoutes); // ২. Auth Route সক্রিয় করা হলো
+// --- ROUTES ---
+// ⚠️ আগে এখানে ভুল ছিল ('/auth'), এখন ঠিক করা হলো ('/api/auth')
+app.use('/api/auth', authRoutes); 
 
 // Default Route
 app.get('/', (req, res) => {
