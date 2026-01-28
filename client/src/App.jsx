@@ -12,6 +12,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 
 // Private Pages
 import Dashboard from "./pages/Dashboard";
+import TeacherDashboard from "./pages/TeacherDashboard";
 import Classroom from "./pages/Classroom";
 import Checkout from "./pages/Checkout";
 
@@ -45,6 +46,7 @@ const Layout = () => {
           
           {/* --- Student Routes --- */}
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
           <Route path="/checkout/:id" element={<Checkout />} />
           <Route path="/class/:id" element={<Classroom />} />
 
