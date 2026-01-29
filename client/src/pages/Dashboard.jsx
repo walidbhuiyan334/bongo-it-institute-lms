@@ -4,38 +4,46 @@ import {
   Grid, User, BookOpen, History, Settings, LogOut, CheckCircle2,
   Star, Edit2, Clock, Menu, X, ChevronRight
 } from "lucide-react";
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(true); // লোডিং স্টেট
 
-  // ✅ ১. ইউজারের ডাটা স্টেট (ডিফল্ট ভ্যালু সহ)
+  // ইউজারের ডাটা স্টেট
   const [userInfo, setUserInfo] = useState({
-    name: "Guest User",
+    name: "",
     email: "",
     role: "student",
-    studentId: "ST-0000",
+    studentId: "",
   });
 
-  // ✅ ২. পেজ লোড হলে চেক করবে লগইন আছে কিনা
+  // ✅ অথেন্টিকেশন এবং ডাটা লোডিং চেক
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
+    const checkAuth = () => {
+      const storedUser = localStorage.getItem("user");
+      const token = localStorage.getItem("token");
 
-    if (!token || !storedUser) {
-      // যদি টোকেন না থাকে, লগইন পেজে পাঠাও
-      navigate("/login");
-    } else {
-      // টোকেন থাকলে ইউজারের তথ্য স্টেটে সেট করো
-      setUserInfo(JSON.parse(storedUser));
-    }
+      if (!token || !storedUser) {
+        // টোকেন না থাকলে লগইন পেজে রিডাইরেক্ট
+        navigate("/login");
+      } else {
+        // টোকেন থাকলে ডাটা সেট করা
+        setUserInfo(JSON.parse(storedUser));
+        setLoading(false); // লোডিং শেষ
+      }
+    };
+
+    checkAuth();
   }, [navigate]);
 
-  // ✅ ৩. লগআউট ফাংশন আপডেট
+  // ✅ লগআউট ফাংশন
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    toast.success("Logged out successfully");
     navigate("/login");
   };
 
@@ -44,7 +52,7 @@ const Dashboard = () => {
     setIsMobileMenuOpen(false);
   };
 
-  // ডামি ডাটা (কোর্স এবং স্ট্যাটস) - এগুলো পরে আমরা API থেকে আনব
+  // --- ডামি ডাটা (API ইন্টিগ্রেশনের আগ পর্যন্ত) ---
   const stats = {
     enrolled: 4,
     active: 2,
@@ -59,9 +67,6 @@ const Dashboard = () => {
       thumbnail: "https://images.unsplash.com/photo-1593720213428-28a5b9e94613?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
       instructor: "ওয়ালিদ ভূঁইয়া",
       category: "Web Development",
-      price: 5000,
-      rating: 4.9,
-      reviews: 120,
       progress: 45
     },
     {
@@ -70,42 +75,28 @@ const Dashboard = () => {
       thumbnail: "https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1474&q=80",
       instructor: "সুমি আক্তার",
       category: "Marketing",
-      price: 3500,
-      rating: 4.8,
-      reviews: 85,
       progress: 10
     }
   ];
 
   const orderHistory = [
-    {
-      courseTitle: "Full Stack Web Development (MERN)",
-      amount: 5000,
-      createdAt: "2026-01-15",
-      status: "Paid"
-    },
-    {
-      courseTitle: "Digital Marketing Masterclass",
-      amount: 3500,
-      createdAt: "2026-01-10",
-      status: "Paid"
-    }
+    { courseTitle: "Full Stack Web Development (MERN)", amount: 5000, createdAt: "2026-01-15", status: "Paid" },
+    { courseTitle: "Digital Marketing Masterclass", amount: 3500, createdAt: "2026-01-10", status: "Paid" }
   ];
 
-  // প্রোফাইল সেকশনের জন্য ইউজারের রিয়েল ডাটা ব্যবহার
-  const profile = {
-    name: userInfo.name, // Real Name
-    email: userInfo.email, // Real Email
-    phone: "017xxxxxxxx", // (এটা পরে ডাটাবেসে থাকলে আনা যাবে)
-    gender: "N/A",
-    bio: "শিখতে ভালোবাসি, গড়তে ভালোবাসি।",
-    createdAt: "2025-12-01"
-  };
+  // ✅ লোডিং স্ক্রিন (ডাটা লোড হওয়ার সময় দেখাবে)
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5e17eb]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] font-['Hind Siliguri'] text-slate-800 pt-20">
       
-      {/* Header Strip (Desktop Only) */}
+      {/* Desktop Header Strip */}
       <div className="fixed top-0 left-0 w-full h-16 bg-white border-b border-gray-200 z-30 hidden lg:block"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -117,7 +108,7 @@ const Dashboard = () => {
                 {userInfo.name ? userInfo.name.charAt(0) : "U"}
               </div>
               <div>
-                <h1 className="text-sm font-bold text-gray-900">{userInfo.name}</h1>
+                <h1 className="text-sm font-bold text-gray-900 line-clamp-1">{userInfo.name}</h1>
                 <p className="text-xs text-gray-500">Student Panel</p>
               </div>
            </div>
@@ -137,7 +128,7 @@ const Dashboard = () => {
             <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden" onClick={() => setIsMobileMenuOpen(false)}></div>
           )}
 
-          {/* --- SIDEBAR (Fixed & Clean) --- */}
+          {/* --- SIDEBAR --- */}
           <aside className={`
             fixed lg:sticky lg:top-24 left-0 w-64 bg-white z-50 transform transition-transform duration-300 ease-out
             ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -153,9 +144,9 @@ const Dashboard = () => {
                  <div className="w-10 h-10 rounded-full bg-[#5e17eb] flex items-center justify-center text-white font-bold shadow-sm uppercase">
                     {userInfo.name ? userInfo.name.charAt(0) : "U"}
                  </div>
-                 <div>
-                    <h3 className="font-bold text-gray-900 text-sm">{userInfo.name}</h3>
-                    <p className="text-[10px] text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded mt-1 inline-block">ID: {userInfo.studentId || "ST-NEW"}</p>
+                 <div className="overflow-hidden">
+                    <h3 className="font-bold text-gray-900 text-sm truncate" title={userInfo.name}>{userInfo.name}</h3>
+                    <p className="text-[10px] text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded mt-1 inline-block">ID: {userInfo._id ? userInfo._id.slice(-6).toUpperCase() : "ST-NEW"}</p>
                  </div>
             </div>
 
@@ -169,7 +160,7 @@ const Dashboard = () => {
             </nav>
 
             {/* Logout */}
-            <button onClick={handleLogout} className="mt-6 flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium text-sm text-red-600 hover:bg-red-50 transition-colors border border-transparent hover:border-red-100">
+            <button onClick={handleLogout} className="mt-6 flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium text-sm text-red-600 hover:bg-red-50 transition-colors border border-transparent hover:border-red-100 w-full text-left">
                <LogOut size={18} /> লগআউট
             </button>
           </aside>
@@ -180,17 +171,18 @@ const Dashboard = () => {
             {/* Welcome Banner */}
             <div className="bg-[#5e17eb] rounded-xl p-6 md:p-8 shadow-sm text-white flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
               <div className="relative z-10">
-                 <h2 className="text-2xl font-bold">স্বাগতম, {userInfo.name}! 👋</h2>
-                 <p className="text-purple-200 text-sm mt-1">আপনার লার্নিং ড্যাশবোর্ডে ফিরে আসার জন্য ধন্যবাদ।</p>
+                 <h2 className="text-2xl font-bold">স্বাগতম, {userInfo.name.split(" ")[0]}! 👋</h2>
+                 <p className="text-purple-200 text-sm mt-1">আপনার লার্নিং জার্নি চালিয়ে যান।</p>
               </div>
               <div className="relative z-10 bg-white/10 px-5 py-3 rounded-lg border border-white/20 text-center min-w-[120px]">
                  <p className="text-2xl font-bold">{stats.enrolled}</p>
                  <p className="text-[10px] uppercase tracking-wider text-purple-200">এনরোল্ড কোর্স</p>
               </div>
-              {/* Subtle Pattern */}
+              {/* Pattern */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
             </div>
 
+            {/* --- DASHBOARD TAB --- */}
             {activeTab === "dashboard" && (
               <>
                 {/* Stats Cards */}
@@ -201,7 +193,7 @@ const Dashboard = () => {
                   <StatCard icon={<Star size={20} className="text-orange-500" />} label="সার্টিফিকেট" value={stats.certificates} />
                 </div>
 
-                {/* Recent Courses Section */}
+                {/* Recent Courses */}
                 <section>
                   <div className="flex items-center justify-between mb-4">
                      <h3 className="text-lg font-bold text-gray-800">সাম্প্রতিক কোর্স</h3>
@@ -211,15 +203,7 @@ const Dashboard = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {enrolledCourses.length > 0 ? (
                       enrolledCourses.slice(0, 2).map((course) => (
-                        <CourseCard
-                          key={course._id}
-                          id={course._id}
-                          image={course.thumbnail}
-                          title={course.title}
-                          instructor={course.instructor}
-                          category={course.category}
-                          progress={course.progress}
-                        />
+                        <CourseCard key={course._id} {...course} />
                       ))
                     ) : (
                       <div className="col-span-full py-12 text-center bg-white rounded-lg border border-dashed border-gray-300">
@@ -229,7 +213,7 @@ const Dashboard = () => {
                   </div>
                 </section>
 
-                {/* Recent Transactions Section */}
+                {/* Recent Transactions */}
                 <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                   <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                     <h3 className="font-bold text-gray-800 text-sm">সাম্প্রতিক লেনদেন</h3>
@@ -244,49 +228,37 @@ const Dashboard = () => {
               </>
             )}
 
-            {/* Profile Tab */}
+            {/* --- PROFILE TAB --- */}
             {activeTab === "profile" && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
                 <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
                    <h3 className="text-lg font-bold text-gray-800">প্রোফাইল তথ্য</h3>
-                   <button onClick={() => setActiveTab("settings")} className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors">
+                   <button className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors">
                       <Edit2 size={14} /> এডিট
                    </button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <ProfileField label="পুরো নাম" value={profile.name} />
-                  <ProfileField label="ইমেইল" value={profile.email} />
-                  <ProfileField label="ফোন নম্বর" value={profile.phone} />
-                  <ProfileField label="লিঙ্গ" value={profile.gender} />
-                  <div className="col-span-1 md:col-span-2">
-                    <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">বায়ো</label>
-                    <p className="text-sm text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-200">{profile.bio}</p>
-                  </div>
+                  <ProfileField label="পুরো নাম" value={userInfo.name} />
+                  <ProfileField label="ইমেইল" value={userInfo.email} />
+                  <ProfileField label="অ্যাকাউন্ট টাইপ" value={userInfo.role.toUpperCase()} />
+                  <ProfileField label="মেম্বারশিপ" value="Lifetime Access" />
                 </div>
               </div>
             )}
 
-            {/* Courses Tab */}
+            {/* --- COURSES TAB --- */}
             {activeTab === "courses" && (
               <div>
                  <h3 className="text-lg font-bold text-gray-800 mb-5">আমার সব কোর্স</h3>
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                    {enrolledCourses.map((course) => (
-                     <CourseCard
-                       key={course._id}
-                       id={course._id}
-                       image={course.thumbnail}
-                       title={course.title}
-                       instructor={course.instructor}
-                       category={course.category}
-                       progress={course.progress}
-                     />
+                     <CourseCard key={course._id} {...course} />
                    ))}
                  </div>
               </div>
             )}
 
-            {/* Orders Tab */}
+            {/* --- ORDERS TAB --- */}
             {activeTab === "orders" && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                   <div className="p-5 border-b border-gray-100 bg-gray-50">
@@ -300,14 +272,14 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* Settings Tab Placeholder */}
+            {/* --- SETTINGS TAB --- */}
             {activeTab === "settings" && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-16 text-center">
                 <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
                   <Settings size={32} />
                 </div>
                 <h3 className="text-lg font-bold text-gray-800">সেটিংস</h3>
-                <p className="text-gray-500 mt-2 text-sm">এই ফিচারটি শীঘ্রই আসছে।</p>
+                <p className="text-gray-500 mt-2 text-sm">পাসওয়ার্ড পরিবর্তন এবং অন্যান্য সেটিংস শীঘ্রই আসছে।</p>
               </div>
             )}
 
@@ -318,12 +290,12 @@ const Dashboard = () => {
   );
 };
 
-// --- Sub-components (Minimalist Style) ---
+// --- Sub-components (Clean & Optimized) ---
 
 const SidebarLink = ({ active, onClick, icon, label }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium text-sm transition-colors ${
+    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium text-sm transition-colors text-left ${
       active 
         ? "bg-[#5e17eb]/10 text-[#5e17eb] border-l-4 border-[#5e17eb]" 
         : "text-gray-600 hover:bg-gray-50 border-l-4 border-transparent"
@@ -334,7 +306,7 @@ const SidebarLink = ({ active, onClick, icon, label }) => (
 );
 
 const StatCard = ({ icon, label, value }) => (
-  <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+  <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
     <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0 border border-gray-100">
       {icon}
     </div>
@@ -345,26 +317,25 @@ const StatCard = ({ icon, label, value }) => (
   </div>
 );
 
-// CourseCard with Link
-const CourseCard = ({ id, image, title, instructor, category, progress }) => (
-  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group flex flex-col">
+const CourseCard = ({ _id, thumbnail, title, instructor, category, progress }) => (
+  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all group flex flex-col h-full">
     <div className="relative h-40 overflow-hidden">
       <img
-        src={image}
+        src={thumbnail}
         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         alt={title}
       />
-      <div className="absolute top-3 left-3 bg-white/90 px-2.5 py-1 rounded text-[10px] font-bold text-gray-800 uppercase border border-gray-100">
+      <div className="absolute top-3 left-3 bg-white/90 px-2.5 py-1 rounded text-[10px] font-bold text-gray-800 uppercase border border-gray-100 shadow-sm">
         {category}
       </div>
     </div>
     
     <div className="p-5 flex flex-col flex-1">
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded">{instructor}</span>
+        <span className="text-xs text-gray-500 font-medium bg-gray-50 px-2 py-0.5 rounded border border-gray-100">{instructor}</span>
       </div>
       
-      <h4 className="text-sm font-bold text-gray-900 mb-4 line-clamp-2 leading-snug flex-1">
+      <h4 className="text-sm font-bold text-gray-900 mb-4 line-clamp-2 leading-snug flex-1" title={title}>
         {title}
       </h4>
       
@@ -375,14 +346,13 @@ const CourseCard = ({ id, image, title, instructor, category, progress }) => (
               <span className="text-[#5e17eb]">{progress}%</span>
            </div>
            <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-[#5e17eb] rounded-full" style={{ width: `${progress}%` }}></div>
+              <div className="h-full bg-[#5e17eb] rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
            </div>
         </div>
       )}
       
-      {/* Link to Classroom */}
-      <Link to={`/class/${id}`} className="mt-4 w-full">
-        <button className="w-full text-center py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 hover:bg-[#5e17eb] hover:text-white hover:border-[#5e17eb] transition-all">
+      <Link to={`/class/${_id}`} className="mt-4 w-full">
+        <button className="w-full text-center py-2.5 rounded-lg border border-[#5e17eb]/20 text-xs font-bold text-[#5e17eb] hover:bg-[#5e17eb] hover:text-white transition-all active:scale-[0.98]">
            ক্লাস শুরু করুন
         </button>
       </Link>
@@ -392,18 +362,18 @@ const CourseCard = ({ id, image, title, instructor, category, progress }) => (
 
 const OrderRow = ({ course, amount, date }) => (
   <div className="px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 overflow-hidden">
        <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600 shrink-0 border border-green-100">
           <CheckCircle2 size={14} />
        </div>
-       <div>
-         <p className="font-bold text-gray-800 text-xs md:text-sm line-clamp-1">{course}</p>
+       <div className="min-w-0">
+         <p className="font-bold text-gray-800 text-xs md:text-sm truncate">{course}</p>
          <p className="text-[10px] text-gray-400">{new Date(date).toLocaleDateString()}</p>
        </div>
     </div>
-    <div className="text-right shrink-0">
+    <div className="text-right shrink-0 ml-2">
        <p className="font-bold text-gray-900 text-sm">৳{amount}</p>
-       <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded mt-1 inline-block">Paid</span>
+       <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded mt-1 inline-block border border-green-100">Paid</span>
     </div>
   </div>
 );
@@ -411,8 +381,8 @@ const OrderRow = ({ course, amount, date }) => (
 const ProfileField = ({ label, value }) => (
   <div>
     <label className="block text-xs font-bold text-gray-400 mb-1.5 uppercase">{label}</label>
-    <div className="text-sm font-medium text-gray-800 bg-white border-b border-gray-200 pb-1">
-      {value}
+    <div className="text-sm font-medium text-gray-800 bg-gray-50 p-3 rounded-lg border border-gray-100">
+      {value || "N/A"}
     </div>
   </div>
 );
