@@ -26,12 +26,10 @@ const Register = () => {
         password,
       });
 
-      // ✅ সফল হলে ভেরিফিকেশন পেজে পাঠানো
+      // ✅ সফল হলে এখন সরাসরি লগইন পেজে পাঠানো হবে
       if (response.data.success) {
-        toast.success("Verification code sent to your email!");
-        
-        // ভেরিফিকেশন পেজে ইমেইলটি সাথে করে পাঠিয়ে দিচ্ছি
-        navigate("/verify-email", { state: { email } });
+        toast.success("Registration successful! Please log in.");
+        navigate("/login"); // ⚠️ আপডেট: ভেরিফিকেশন পেজের বদলে লগইন পেজ
       }
     } catch (err) {
       console.error("Register Error:", err);

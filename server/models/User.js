@@ -20,26 +20,24 @@ const UserSchema = new mongoose.Schema(
       min: 5,
     },
     role: {
-        type: String,
-        enum: ["student", "admin", "instructor"],
-        default: "student",
+      type: String,
+      enum: ["student", "admin", "instructor"],
+      default: "student",
     },
     studentId: {
-        type: String,
-        default: () => "ST-" + Math.floor(1000 + Math.random() * 9000)
+      type: String,
+      default: () => "ST-" + Math.floor(1000 + Math.random() * 9000)
     },
     isVerified: {
-        type: Boolean,
-        default: false,
+      type: Boolean,
+      default: true, // রেজিস্টার করলেই একাউন্ট অ্যাক্টিভ
     },
-    verificationCode: {
-        type: String,
-    },
+    // পাসওয়ার্ড রিসেট ফিচার ভবিষ্যতে লাগলে এই ফিল্ডগুলো কাজে আসবে
     resetPasswordToken: {
-        type: String,
+      type: String,
     },
     resetPasswordExpires: {
-        type: Date,
+      type: Date,
     }
   },
   { timestamps: true }

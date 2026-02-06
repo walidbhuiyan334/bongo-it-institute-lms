@@ -3,14 +3,13 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto"); 
 const User = require("../models/User");
-const PendingUser = require("../models/PendingUser"); // ✅ নতুন মডেল ইম্পোর্ট
-const sendEmail = require("../utils/sendEmail");
-const { verificationEmailTemplate, resetPasswordTemplate } = require("../utils/emailTemplates");
+const sendEmail = require("../utils/sendEmail"); // শুধুমাত্র পাসওয়ার্ড রিসেটের জন্য রাখা হলো
+const { resetPasswordTemplate } = require("../utils/emailTemplates");
 
 const router = express.Router();
 
 // ------------------------------------------------------------------
-// 1. REGISTER ROUTE (Save to PendingUser Collection)
+// 1. REGISTER ROUTE (Direct Save to User - No Verification)
 // ------------------------------------------------------------------
 router.post("/register", async (req, res) => {
   try {
@@ -21,43 +20,36 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ success: false, message: "All fields are required!" });
     }
 
-    // ২. মেইন ইউজার টেবিলে ইউজার আগে আছে কিনা চেক
+    // ২. ইউজার আগে আছে কিনা চেক
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: "User already exists with this email!" });
+      return res.status(400).json({ success: false, message: "User already exists! Please Login." });
     }
 
-    // ৩. পেন্ডিং ইউজারে আগের কোনো ডাটা থাকলে ডিলিট করে নতুন করে শুরু (Cleanup)
-    await PendingUser.findOneAndDelete({ email });
-
-    // ৪. পাসওয়ার্ড হাশ করা
+    // ৩. পাসওয়ার্ড হাশ করা
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // ৫. ৬ ডিজিটের ভেরিফিকেশন কোড জেনারেট
-    const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // ৬. পেন্ডিং ইউজার তৈরি (মেইন ইউজার নয়)
-    const newPendingUser = new PendingUser({
+    // ৪. সরাসরি ইউজার তৈরি (isVerified: true)
+    const newUser = new User({
       name,
       email,
       password: hashedPassword,
       role: role || "student",
-      verificationCode: verifyCode
+      isVerified: true, // ✅ অটো ভেরিফাইড
+      studentId: "ST-" + Math.floor(1000 + Math.random() * 9000)
     });
 
-    await newPendingUser.save();
+    const savedUser = await newUser.save();
 
-    // ৭. ইমেইল পাঠানো
-    await sendEmail(
-      email, 
-      "Verify Your Account - Bonggo IT", 
-      verificationEmailTemplate(verifyCode)
-    );
+    // ৫. রেসপন্স (পাসওয়ার্ড ফিল্ড বাদ দিয়ে)
+    const userResponse = savedUser.toObject();
+    delete userResponse.password;
 
     res.status(201).json({ 
       success: true, 
-      message: "Verification code sent! Please check your email." 
+      message: "Registration successful! You can login now.",
+      user: userResponse
     });
 
   } catch (err) {
@@ -67,85 +59,13 @@ router.post("/register", async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// 2. VERIFY EMAIL ROUTE (Move from Pending to Main User)
-// ------------------------------------------------------------------
-router.post("/verify-email", async (req, res) => {
-  try {
-    const { email, code } = req.body;
-
-    // ১. পেন্ডিং কালেকশনে খোঁজা
-    const pendingUser = await PendingUser.findOne({ email });
-    
-    if (!pendingUser) {
-      return res.status(400).json({ success: false, message: "Code expired or invalid email. Please register again." });
-    }
-
-    // ২. কোড ম্যাচিং চেক করা
-    if (pendingUser.verificationCode !== code) {
-      return res.status(400).json({ success: false, message: "Invalid Verification Code!" });
-    }
-
-    // ৩. মেইন ইউজারে সেভ করা (Permanent Save)
-    const newUser = new User({
-      name: pendingUser.name,
-      email: pendingUser.email,
-      password: pendingUser.password,
-      role: pendingUser.role,
-      isVerified: true, // এখন ভেরিফাইড
-      studentId: "ST-" + Math.floor(1000 + Math.random() * 9000) // Student ID Generate
-    });
-
-    await newUser.save();
-
-    // ৪. পেন্ডিং থেকে মুছে ফেলা (Clean up)
-    await PendingUser.findOneAndDelete({ email });
-
-    res.json({ success: true, message: "Email Verified Successfully! You can now login." });
-    
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// ------------------------------------------------------------------
-// 3. RESEND CODE ROUTE (New Feature)
-// ------------------------------------------------------------------
-router.post("/resend-code", async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    const pendingUser = await PendingUser.findOne({ email });
-    if (!pendingUser) {
-      return res.status(400).json({ success: false, message: "Session expired or User not found. Please register again." });
-    }
-
-    // নতুন কোড জেনারেট
-    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    // কোড আপডেট এবং মেয়াদ (TTL) রিসেট করার জন্য
-    pendingUser.verificationCode = newCode;
-    pendingUser.createdAt = Date.now(); // সময় বাড়িয়ে দেওয়া হলো
-    
-    await pendingUser.save();
-
-    // আবার ইমেইল পাঠানো
-    await sendEmail(email, "New Verification Code", verificationEmailTemplate(newCode));
-
-    res.json({ success: true, message: "New verification code sent to your email!" });
-
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// ------------------------------------------------------------------
-// 4. LOGIN ROUTE
+// 2. LOGIN ROUTE
 // ------------------------------------------------------------------
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // ১. ইউজার খোঁজা (মেইন টেবিলে)
+    // ১. ইউজার খোঁজা
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ success: false, message: "User not found!" });
 
@@ -161,7 +81,6 @@ router.post("/login", async (req, res) => {
     // ৪. রেসপন্স
     const userResponse = user.toObject();
     delete userResponse.password;
-    delete userResponse.verificationCode;
     delete userResponse.resetPasswordToken;
 
     res.status(200).json({ 
@@ -176,7 +95,7 @@ router.post("/login", async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// 5. FORGOT PASSWORD ROUTE
+// 3. FORGOT PASSWORD ROUTE
 // ------------------------------------------------------------------
 router.post("/forgot-password", async (req, res) => {
   try {
@@ -185,20 +104,22 @@ router.post("/forgot-password", async (req, res) => {
 
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-    // টোকেন জেনারেট (১ ঘণ্টার জন্য ভ্যালিড)
+    // টোকেন জেনারেট
     const resetToken = crypto.randomBytes(32).toString("hex");
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = Date.now() + 3600000; // 1 Hour
 
     await user.save();
 
-    // পাসওয়ার্ড রিসেট লিংক তৈরি
+    // লিংক তৈরি
     const frontendURL = process.env.VITE_API_URL 
         ? "https://bongo-lms.vercel.app" 
         : "http://localhost:5173";
         
     const resetLink = `${frontendURL}/reset-password/${resetToken}`;
 
+    // ⚠️ ইমেইল পাঠানো (যদি SMTP ঠিক না থাকে তবে এখানে এরর খেতে পারে)
+    // আপনি চাইলে আপাতত এটি কমেন্ট করে রাখতে পারেন
     await sendEmail(
       email, 
       "Reset Password Request", 
@@ -207,18 +128,18 @@ router.post("/forgot-password", async (req, res) => {
 
     res.json({ success: true, message: "Password reset link sent to your email." });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error("Forgot Password Error:", err);
+    res.status(500).json({ success: false, message: "Email could not be sent. Please contact support." });
   }
 });
 
 // ------------------------------------------------------------------
-// 6. RESET PASSWORD ROUTE
+// 4. RESET PASSWORD ROUTE
 // ------------------------------------------------------------------
 router.post("/reset-password", async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
-    // টোকেন এবং সময় চেক
     const user = await User.findOne({
       resetPasswordToken: token,
       resetPasswordExpires: { $gt: Date.now() }, 
@@ -226,11 +147,9 @@ router.post("/reset-password", async (req, res) => {
 
     if (!user) return res.status(400).json({ success: false, message: "Token is invalid or has expired." });
 
-    // নতুন পাসওয়ার্ড হ্যাশ করে সেভ
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
     
-    // টোকেন ক্লিয়ার করা
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
 
