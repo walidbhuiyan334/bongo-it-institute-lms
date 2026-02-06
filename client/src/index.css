@@ -1,0 +1,58 @@
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* গ্লোবাল ফন্ট এবং বডি স্টাইল */
+@layer base {
+  html {
+    scroll-behavior: smooth; /* স্মুথ স্ক্রলিং */
+  }
+  
+ /* Global Font Apply */
+body {
+  font-family: "Anek Bangla", "Anonymous Pro", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optional: Scrollbar Design for Professional Look */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+  /* ফোকাস করলে ডিফল্ট নীল বর্ডার রিমুভ করে ব্র্যান্ড কালার দেওয়া */
+  input:focus, textarea:focus, select:focus {
+    @apply outline-none ring-2 ring-[#5e17eb]/20 border-[#5e17eb];
+  }
+}
+
+/* কাস্টম এনিমেশন (যেমন Blob বা Fade In) */
+@layer utilities {
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+}
+
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
