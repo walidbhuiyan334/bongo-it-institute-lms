@@ -10,7 +10,7 @@ const authRoutes = require('./routes/auth');
 const courseRoutes = require("./routes/courseRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const orderRoutes = require("./routes/orderRoutes");
-const contactRoutes = require("./routes/contactRoutes"); // ✅ Contact Route Import
+const contactRoutes = require("./routes/contactRoutes"); 
 const recruitmentRoutes = require("./routes/recruitmentRoutes");
 
 dotenv.config();
@@ -19,7 +19,11 @@ connectDB();
 const app = express();
 
 // --- Middlewares ---
-app.use(express.json());
+
+// ✅ আপডেট: ছবির আপলোড এরর ফিক্স করার জন্য লিমিট বাড়ানো হয়েছে
+app.use(express.json({ limit: '10mb' })); 
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
 app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(morgan("common"));
@@ -30,7 +34,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/orders", orderRoutes);
-app.use("/api/contact", contactRoutes); // ✅ Contact Route Connected
+app.use("/api/contact", contactRoutes); 
 app.use("/api/recruitment", recruitmentRoutes);
 
 // Default Route

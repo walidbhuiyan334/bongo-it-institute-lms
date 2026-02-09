@@ -3,46 +3,42 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto"); 
 const User = require("../models/User");
-const sendEmail = require("../utils/sendEmail"); // শুধুমাত্র পাসওয়ার্ড রিসেটের জন্য রাখা হলো
+const sendEmail = require("../utils/sendEmail"); 
 const { resetPasswordTemplate } = require("../utils/emailTemplates");
+// ✅ মিডলওয়্যার ইম্পোর্ট (নিশ্চিত করুন এই ফাইলে verifyToken আছে)
+const { verifyToken } = require("../middleware/verifyToken"); 
 
 const router = express.Router();
 
 // ------------------------------------------------------------------
-// 1. REGISTER ROUTE (Direct Save to User - No Verification)
+// 1. REGISTER ROUTE
 // ------------------------------------------------------------------
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
-    // ১. ভ্যালিডেশন চেক
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: "All fields are required!" });
     }
 
-    // ২. ইউজার আগে আছে কিনা চেক
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ success: false, message: "User already exists! Please Login." });
     }
 
-    // ৩. পাসওয়ার্ড হাশ করা
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // ৪. সরাসরি ইউজার তৈরি (isVerified: true)
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
       role: role || "student",
-      isVerified: true, // ✅ অটো ভেরিফাইড
-      studentId: "ST-" + Math.floor(1000 + Math.random() * 9000)
+      isVerified: true, 
+      studentId: "ST-" + Math.floor(100000 + Math.random() * 900000)
     });
 
     const savedUser = await newUser.save();
-
-    // ৫. রেসপন্স (পাসওয়ার্ড ফিল্ড বাদ দিয়ে)
     const userResponse = savedUser.toObject();
     delete userResponse.password;
 
@@ -65,20 +61,16 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // ১. ইউজার খোঁজা
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ success: false, message: "User not found!" });
 
-    // ২. পাসওয়ার্ড ম্যাচিং
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ success: false, message: "Invalid credentials!" });
 
-    // ৩. টোকেন জেনারেট
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: "1d",
     });
 
-    // ৪. রেসপন্স
     const userResponse = user.toObject();
     delete userResponse.password;
     delete userResponse.resetPasswordToken;
@@ -95,7 +87,46 @@ router.post("/login", async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// 3. FORGOT PASSWORD ROUTE
+// 3. UPDATE PROFILE ROUTE (New Feature) ✅
+// ------------------------------------------------------------------
+router.put("/update-profile", verifyToken, async (req, res) => {
+  try {
+    const { name, phone, headline, bio, avatar } = req.body;
+    const userId = req.user.id; // verifyToken থেকে পাওয়া ID
+
+    // স্টুডেন্ট আইডি বা ইমেইল আপডেট করা যাবে না, শুধু বাকিগুলো
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { 
+        $set: { 
+          name, 
+          phone, 
+          headline, 
+          bio,
+          avatar 
+        } 
+      },
+      { new: true, runValidators: true } // আপডেটেড ডাটা রিটার্ন করবে
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully!",
+      user: updatedUser
+    });
+
+  } catch (err) {
+    console.error("Update Error:", err);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+});
+
+// ------------------------------------------------------------------
+// 4. FORGOT PASSWORD ROUTE
 // ------------------------------------------------------------------
 router.post("/forgot-password", async (req, res) => {
   try {
@@ -104,22 +135,18 @@ router.post("/forgot-password", async (req, res) => {
 
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-    // টোকেন জেনারেট
     const resetToken = crypto.randomBytes(32).toString("hex");
     user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = Date.now() + 3600000; // 1 Hour
+    user.resetPasswordExpires = Date.now() + 3600000; 
 
     await user.save();
 
-    // লিংক তৈরি
     const frontendURL = process.env.VITE_API_URL 
         ? "https://bongo-lms.vercel.app" 
         : "http://localhost:5173";
         
     const resetLink = `${frontendURL}/reset-password/${resetToken}`;
 
-    // ⚠️ ইমেইল পাঠানো (যদি SMTP ঠিক না থাকে তবে এখানে এরর খেতে পারে)
-    // আপনি চাইলে আপাতত এটি কমেন্ট করে রাখতে পারেন
     await sendEmail(
       email, 
       "Reset Password Request", 
@@ -129,12 +156,12 @@ router.post("/forgot-password", async (req, res) => {
     res.json({ success: true, message: "Password reset link sent to your email." });
   } catch (err) {
     console.error("Forgot Password Error:", err);
-    res.status(500).json({ success: false, message: "Email could not be sent. Please contact support." });
+    res.status(500).json({ success: false, message: "Email could not be sent." });
   }
 });
 
 // ------------------------------------------------------------------
-// 4. RESET PASSWORD ROUTE
+// 5. RESET PASSWORD ROUTE
 // ------------------------------------------------------------------
 router.post("/reset-password", async (req, res) => {
   try {

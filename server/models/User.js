@@ -5,19 +5,21 @@ const UserSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      min: 2,
-      max: 50,
+      trim: true, // ✅ নামের আগে বা পরে ভুলে স্পেস থাকলে রিমুভ করবে
+      minlength: 2,
+      maxlength: 50,
     },
     email: {
       type: String,
       required: true,
-      max: 50,
+      trim: true,
+      lowercase: true, // ✅ ইমেইল সবসময় ছোট হাতের অক্ষরে সেভ হবে
       unique: true,
     },
     password: {
       type: String,
       required: true,
-      min: 5,
+      minlength: 5,
     },
     role: {
       type: String,
@@ -26,13 +28,39 @@ const UserSchema = new mongoose.Schema(
     },
     studentId: {
       type: String,
-      default: () => "ST-" + Math.floor(1000 + Math.random() * 9000)
+      unique: true, 
+      default: () => "ST-" + Math.floor(100000 + Math.random() * 900000)
     },
+    
+    // ✅ প্রোফাইল সেকশন (আপডেট করা হয়েছে)
+    phone: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    headline: {
+      type: String,
+      default: "", 
+      trim: true,
+      maxlength: 100, // হেডলাইন খুব বড় না হওয়াই ভালো
+    },
+    bio: {
+      type: String,
+      default: "", 
+      trim: true,
+      maxlength: 1000, // ✅ আগে max ছিল, স্ট্রিং এর জন্য maxlength হয়
+    },
+    avatar: {
+      type: String,
+      default: "", // এখানে Base64 ইমেজ স্ট্রিং থাকবে
+    },
+
     isVerified: {
       type: Boolean,
-      default: true, // রেজিস্টার করলেই একাউন্ট অ্যাক্টিভ
+      default: true,
     },
-    // পাসওয়ার্ড রিসেট ফিচার ভবিষ্যতে লাগলে এই ফিল্ডগুলো কাজে আসবে
+    
+    // পাসওয়ার্ড রিসেট
     resetPasswordToken: {
       type: String,
     },
