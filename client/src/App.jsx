@@ -6,7 +6,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import PrivateRoute from "./components/PrivateRoute";
 import JusticeModal from "./components/JusticeModal";
-import ScrollToTop from "./components/ScrollToTop"; // ✅ Import ScrollToTop
+import ScrollToTop from "./components/ScrollToTop"; 
 
 // Pages
 import Home from "./pages/Home";
@@ -25,7 +25,7 @@ import Contact from "./pages/Contact";
 import Careers from "./pages/Careers";
 import JobApplication from "./pages/JobApplication";
 import Mentors from "./pages/Mentors";
-
+import InvoicePrint from "./pages/InvoicePrint";
 
 // Advanced Pages
 import TeacherDashboard from "./pages/TeacherDashboard";
@@ -35,17 +35,23 @@ import AdminLogin from "./pages/AdminLogin";
 
 const Layout = () => {
   const location = useLocation();
-  // এডমিন বা ক্লাসরুম রুটে ন্যাপবার/ফুটার হাইড করার লজিক
-  const isHiddenRoute = location.pathname.startsWith("/admin") || location.pathname.startsWith("/class");
+  
+  // ✅ UPDATE: ইনভয়েস প্রিন্ট পেজের জন্য Navbar/Footer হাইড করার লজিক যুক্ত করা হলো
+  const isHiddenRoute = 
+    location.pathname.startsWith("/admin") || 
+    location.pathname.startsWith("/class") || 
+    location.pathname.startsWith("/invoice-print");
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col font-['Hind Siliguri'] text-gray-900">
       
-      {/* ✅ ScrollToTop এখানে বসালে রাউট চেঞ্জের সাথে সাথে পেজ উপরে চলে যাবে */}
+      {/* ScrollToTop */}
       <ScrollToTop /> 
 
+      {/* Navbar দেখাবে না যদি isHiddenRoute সত্য হয় */}
       {!isHiddenRoute && <Navbar />}
       
+      {/* প্যাডিং বাদ দেওয়া হবে যদি isHiddenRoute সত্য হয় (যাতে ইনভয়েস পেপারের উপরে ফাঁকা না থাকে) */}
       <div className={`${!isHiddenRoute ? "pt-20" : ""} flex-grow`}>
         <Routes>
           {/* --- PUBLIC ROUTES --- */}
@@ -57,7 +63,6 @@ const Layout = () => {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           <Route path="/courses" element={<Courses />} />
-          {/* slug দিয়ে ডাইনামিক রাউট */}
           <Route path="/course/:slug" element={<CourseDetails />} />
           
           <Route path="/about" element={<AboutUs />} />
@@ -65,7 +70,9 @@ const Layout = () => {
           <Route path="/careers" element={<Careers />} />
           <Route path="/careers/apply/:jobId" element={<JobApplication />} />
           <Route path="/mentors" element={<Mentors />} />
-           
+          
+          {/* ✅ Invoice Print Route */}
+          <Route path="/invoice-print" element={<InvoicePrint />} />
           
           
           {/* --- STUDENT PRIVATE ROUTES --- */}
@@ -125,6 +132,7 @@ const Layout = () => {
         </Routes>
       </div>
 
+      {/* Footer দেখাবে না যদি isHiddenRoute সত্য হয় */}
       {!isHiddenRoute && <Footer />}
     </div>
   );
@@ -176,7 +184,7 @@ function App() {
         }}
       />
       
-      {/* ✅ Justice Modal */}
+      {/* Justice Modal */}
       <JusticeModal />
 
       <Layout />
